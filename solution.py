@@ -1,10 +1,29 @@
 import numpy as np 
 from helper import *
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import PolynomialFeatures
+
 '''
 Homework2: logistic regression classifier
 '''
-
-
+def deriv(x):
+    
+    '''
+    Description: This function takes in a value of x and returns its derivative based on the 
+    initial function we specified.
+    
+    Arguments:
+    
+    x - a numerical value of x 
+    
+    Returns:
+    
+    x_deriv - a numerical value of the derivative of x
+    
+    '''
+    
+    x_deriv = 3* (x**2) - (6 * (x))
+    return x_deriv
 def logistic_regression(data, label, max_iter, learning_rate):
 	'''
 	The logistic regression classifier function.
@@ -20,33 +39,35 @@ def logistic_regression(data, label, max_iter, learning_rate):
 	Returns:
 		w: the seperater with shape (3, 1). You must initilize it with w = np.zeros((d,1))
 	'''
-	w = np.zeros(data.shape[1])
+	# logisticRegr = LogisticRegression()
+	# logisticRegr.fit(data, label)
 
-
+	# return logisticRegr
+	n = data.shape[1]
+	w = np.zeros(n)
+	# w = np.zeros((n,1))
+	x = data
+	y = label.reshape(-1,1)
+	# f = np.dot(data, label)
 	for _ in range(max_iter):
-		z = np.dot(data, w)
-		h = sigmoid(z)
+		numerator = x * y
+		h = sigmoid(numerator * w.T)
+		gradient = np.sum(numerator/h,axis=0).reshape(w.shape)
 
-		loss = h - label
-		cost = np.sum(loss**2)/ (2 * label.shape[0])
-		
-		gradient = np.dot(data.T, loss) / label.shape[0]
-		
-		# print('s,',scores)
-		# print('os',output_error_signal)
+		# dw = np.sum(x*y/(1+np.exp(y*w.T*x)),axis=0).reshape(w.shape)
+		gradient /= -data.shape[0]
+		# z = np.dot(data, w.T)
+		# h = sigmoid(z)
 
-		# print('p',predictions)
-		# print('g',gradient)
+		# ## Loss: this isnt right? 
+		# l = h - label
 
-		w -= learning_rate * gradient
+		# # loss = np.dot(h, label)
+		# gradient = (-1 / label.shape[0]) * np.dot(data.T, l)
+		w +=  -(learning_rate * gradient)
 
-	print(w)
+	print('weights', w)
 	return w
-# def gradient_descent(theta, x, y, learning_rate, regularization = 0):
-#     regularization = theta * regularization
-#     error = hypothesis(theta, x) - y
-#     n = (learning_rate / len(x)) * (np.matmul(x.T, error) + regularization)
-#     return theta - n
 
 def thirdorder(data):
 	'''
@@ -63,20 +84,83 @@ def thirdorder(data):
 		The first dimension represents total samples (training: 1561; testing: 424) 
 		and the second dimesion represents total features.
 	'''
-	pass
+
+	
+	# print(sq, cube)
+	# for item in data:
+	# 	sq = np.square(item[1:])
+	# 	cube = item[1:] ** 3
+	# 	print(sq, cube)
+	# polynomialFeatures= np.array()
+	# t = data[0][1:]
+	# z.append(t)
+	# t = data[1][1:]
+	# z.append(t)
+
+	# z=[]
+	polynomialFeatures = []
+	for item in data:
+		
+		# z.append(item[1:])
+
+		sq = np.square(item[1:])
+		cube = item[1:] ** 3
+		sqMult = np.multiply(sq,item[:0:-1])
+		singularMult = item[1] * item[2]
+
+		item = np.append(item, [singularMult])
+		item = np.append(item, sq)
+		item = np.append(item, cube)
+		item = np.append(item, sqMult)
+		polynomialFeatures.append(item)
+
+	polynomialFeatures = np.asarray(polynomialFeatures)
+
+	# transformer = PolynomialFeatures(degree=3)
+	# X = transformer.fit_transform(z)
+
+	# print('d',z)
+	# print('x',X)
+	return polynomialFeatures
+	# z=np.polyfit(data,data,3,full=True)
+	# print(z.shape)
+	# X_poly = np.zeros((data.shape[0], 3))
+	# print(X_poly)
+	# print(data.squeeze())
+	# print(X_poly[:, 0])
+	# # The first column in our transformed matrix is just the vector we started with.
+	# X_poly[:, 0] = data.squeeze()
+	# Cleverness Alert:
+	# We create the subsequent columns by multiplying the most recently created column
+	# by X.  This creates the sequence X -> X^2 -> X^3 -> etc...
+	# for i in range(1, 3):
+	# 	X_poly[:, i] = X_poly[:, i-1] * data.squeeze()
+	# return X_poly
 
 
 def accuracy(x, y, w):
 	z = np.dot(x, w)
-
 	h = sigmoid(z)
-	# f = 1.0/(1 + np.exp(-np.dot(x, w.T))) 
-	# loss = (-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()
-	# print(loss)
-	pred_value = np.where( h > .5, 1, -1) 
+	pred_value = np.where( h > .5, 1., -1.) 
 	acc = np.sum(y == pred_value)/y.shape[0]
+	print(acc)
 	return acc
+	# print(x[0])
+	# print(h[100:130])
+	# print(y[100:130])
+	# for item in h:
+	# 	print
+
+	# print("pred_value",pred_value)
+	
+
+	# # preds = np.round(sigmoid(z))
+
+
+	# print('p',h)
+	# print('y',y)
+	# return acc
 
 
 def sigmoid(z):
-	return 1. / (1 + np.exp(-z))
+	return 1 / (1 + np.exp(-z))
